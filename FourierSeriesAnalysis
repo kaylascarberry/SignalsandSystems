@@ -1,0 +1,248 @@
+clc;clear; close all;
+
+% A: SineWave
+% i. Calculate the Root Mean Square Voltage of the sinewave (Volts, DbV &
+% dBm)
+
+Vpp = 1.25; %Volts            % Given:
+A=Vpp;  
+T0 = 0.002; %Miliseconds      % Given:
+VRMS = Vpp*(1/(2*sqrt(2)))    % Voltage RMS Formula:
+VRMS_dBV=20*log10(VRMS/1)     % Voltage dBV RMS Formula:
+R = 50; %Ohms                 
+Vr = 0.22361;
+VRMS_dBm = 20*log10(VRMS/Vr)  % Voltage dBm RMS Formula:
+
+% SineWave
+% Time Function
+   Samples = 100000                
+   Period = 1/Samples
+   
+   w0_Sine = 1/T0
+   cycle = 1/w0_Sine
+   cycles = 5*cycle        
+   t_Sine = (0:Period:cycles-Period);  
+
+% Sine Wave:
+   x = (Vpp/2)*sin(2*pi*w0_Sine*t_Sine);
+   % Plot the signal versus time:
+   figure(1);
+   plot(t_Sine,x);
+   xlabel('time (in seconds)');
+   ylabel('Amplitude');
+   title('Signal versus Time');
+   zoom xon;
+
+% Square Wave:
+tau=[(T0/5); (T0/4); (T0/3); (T0/2)]   %Length of Time Constant
+N=20;                               %Samples
+Th=1e-12;                           % Threshold Value for Theta
+M1=2;
+M2=1000;
+M=N;
+
+% Square Wave:
+% Conversions Formulas
+f0 = 1/T0                           % Period to Frequency Conversion
+w0=2*pi/T0                          % Omega-not Conversion
+d=tau/T0                            % Duty Cycle %
+a0=(A*tau/T0)       % DC Offset @ t=0
+
+% Square Wave:
+% Intervals
+n1=1:N;              % Interval from 1 - 10 in increments of 1
+n=0:N;               % Interval from 0 - 10 in increments of 1
+f1=f0*n;             % Interval from 0 - 5000 in increments of 500
+
+% Square Wave:
+% 2 x Amplitude x Duty Cycle x Array Sin Funct(array[1:10] x Duty Cycle)
+aa=2.*A.*d.*sinc(n1.*d); 
+a = [a0, aa];        % Sums Array to includes dc offset to the beginning.
+ba=zeros(1,N);      % Creates Zeros array from 1 to 10*
+b=[0,ba];           % increases Zeros array from 0 to 10*
+c=sqrt(a.^2+b.^2)   % Convert to Positive
+
+% % Square Wave:
+% % Voltage Conversions for dBV Plot
+zero_column = zeros(4,1,'like', aa);
+% zero_column = sym(zero_column)
+e = [zero_column,aa];
+f=sqrt(e.^2);
+VRMS_f = f.*(1/(sqrt(2)))
+VRMS_dBV_f=20.*log10(VRMS_f) 
+
+%Print Plots loop
+theta=zeros(1,N+1);
+for k = 1:4
+
+%Plots for dBV
+% Graphs 2 - 5 Dynamic Title Generation
+Duty_Cycle = 100*(1/(6-k));     %Loop based Duty Cycle Generation
+Duty_Cycle = fix(Duty_Cycle);   %Removes Decimals
+figure(k+1)                     %Figures 2-5 Generation via Loop
+Fig = figure(k+1);
+index = Duty_Cycle;             %Double
+poster = 'DUTY CYCLE';          %String
+figureName = sprintf('%s %d %s', poster, index, '%'); 
+Fig.Name = figureName; 
+Fig.NumberTitle = 'off';
+title(figureName, 'FontSize', 30);
+
+% Section 1 Plot Generation
+% Graph 2-5 : Plot 1 of 3
+subplot(2,2,1)
+stem(f1,VRMS_dBV_f(k,1:N+1),'LineWidth',1, 'baseValue', -329.2549);
+grid;
+xlabel('f (Hz)');
+ylabel('dBV');
+set(gca,'YTick',-35:5:0)
+set(gca,'YTickLabel',-35:5:0)
+axis([0,N*f0,-35,0])
+title('dBV vs. Frequency');
+
+% Plot for C_n
+% Section 2
+% Graph 2-5 : Plot 2 of 3
+subplot(2,2,2)
+stem(f1,c(k,1:N+1),'LineWidth',2);grid;
+xlabel('f (Hz)');ylabel('fc_n');
+set(gca,'YTick',0:0.1:1)
+set(gca,'YTickLabel',0:0.1:1)
+axis([0,N*f0,0,1])
+title('C_n vs. Frequency');
+
+%Theta Calculations using threshold Voltage Variable 'Th'
+%Nested Loop
+for i=1:length(a)
+    if (abs(a(k,i))<=Th)&&(abs(b(i))<=Th)
+        theta(k,i)=0;
+    elseif (a(k,i)<-Th)&&(abs(b(i))<=Th)
+        theta(k,i)=pi;
+    elseif (a(k,i)>Th)&&(abs(b(i))<=Th)
+        theta(k,i)=0;        
+    elseif (abs(a(k,i))<Th)&&(b(i)>Th)
+        theta(k,i)=-pi/2;
+    elseif (abs(a(k,i))<Th)&&(b(i)<-Th)
+        theta(k,i)=pi/2;
+    else
+        theta(k,i)=-atan2(b(i),a(k,i));
+    end
+end %End Nested Loop
+
+%Theta Conversions
+theta=wrapToPi(theta);
+thetad=theta*180/pi
+
+%Plot Theta
+% Section 3
+% Graph 2-5 : Plot 3 of 3
+subplot(2,2,3)
+stem(f1,thetad(k,1:N+1),'LineWidth',2);
+grid;
+xlabel('f (Hz)');
+ylabel('\theta_n (deg)');
+set(gca,'YTick',-180:90:180)
+set(gca,'YTickLabel',-180:90:180)
+title('\theta_n vs. Frequency');
+end   %End Figures 2-5 Plot Loops
+
+
+% Comparison Plot
+%Graph # 6
+figure(6)
+for q = 1:4 
+stem((n),VRMS_dBV_f(q,1:N+1),'LineWidth',1, 'baseValue', -329.2549);
+grid;
+xlabel('Harmonic Number');
+ylabel('dBV');
+set(gca,'YTick',-35:5:0)
+set(gca,'YTickLabel',-35:5:0)
+xticks(0:1:20);
+axis([0,N+1,-35,0])
+[t,s] = title('Sinewave & Squarewave Trigonometric Fourier Coefficient',...
+'magnitude Cn (dBV) versus harmonic number',...
+    'Color','blue');
+hold on;
+end
+
+% SineWave
+% Only one Frequency plot at harmonic #1: Sinewave at Constant Freq
+stem(1,VRMS_dBV,'LineWidth',1, 'baseValue', -329.2549);
+hold on
+legend('20%','25%','33%','50%', 'Sine Wave');
+
+
+% Plot for C_n
+% Graph # 7
+for q = 1:4 
+figure(7);
+stem((n),c(q,1:N+1),'LineWidth',2);grid;
+xlabel('Harmonic Number');ylabel('fc_n');
+set(gca,'YTick',0:0.1:1.75)
+set(gca,'YTickLabel',0:0.1:1)
+xticks(0:1:20);
+axis([0,N+1,0,1])
+title('C_n vs. Frequency');
+hold on;
+grid on;
+end
+legend('20%','25%','33%','50%');
+
+
+% Figure 8
+% Plot for cn vs. Duty Cycle
+% FOR DUTY CYCLES BETWEEN 0% & 100%   !!!!!!!!!!!
+t = linspace(0,1,101)';     % column is transposed to row: Duty Cycle
+aa=2.*A.*t.*sinc(n1.*t); 
+a0=(A*t);                        % Amplitude x Duty Cycle
+a = [a0, aa];        % Sums Array to includes dc offset to the beginning.
+ba=zeros(1,N);      % Creates Zeros array from 1 to 10*
+b=[0,ba];           % increases Zeros array from 0 to 10*
+c=sqrt(a.^2+b.^2);   % Convert to Positive
+
+
+% Cutting a matrix
+c_Cut = c(:,2:7);            %Removes infinity number from Row#1
+Temp = zeros(101,1);         
+c_Cut = [Temp, c_Cut];     %Concatinate to add Zeros to ro#1
+
+%Declaration for figure 8
+figure(8);
+
+%Loop for plotting 6 Harmonic frequencies
+for q = 1:6 
+g(q,:) = linspace(0,1,101);
+plot((g(q,:)),c_Cut(:,q));grid;
+hold on;
+end     %End loop for plotting figure 8
+
+%Figure 8 Graph Information
+legend('V=0','Fundamental','2nd Harmonic','3rd Harmonic',...
+    '4th Harmonic', '5th Harmonic');
+title('Fourier Coefficient_n vs. Duty Cycle');
+xlabel('Duty Cycle');
+ylabel('Fourier Coefficient_n (Voltage)');
+
+%Figure 9 Graphing a square wave:
+% Square Wave
+% Time Function
+   w0_Sine = 1/0.003
+   cycle = 1/w0_Sine
+   cycles = 5*cycle 
+
+t = linspace(0,cycles, 100)';
+x = square(10*2*pi*50*(t+((2e-3)/4)),50);
+x = x*1.25;
+   figure(9);
+   plot(t,x);
+   xlabel('time (in seconds)');
+   ylabel('Amplitude');
+   title('Signal versus Time');
+   zoom xon;
+
+% SineWave
+% Time Function
+    
+ 
+
+
