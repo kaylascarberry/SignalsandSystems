@@ -4,9 +4,9 @@ clc;clear; close all;
 % i. Calculate the Root Mean Square Voltage of the sinewave (Volts, DbV &
 % dBm)
 
-Vpp = 1.25; %Volts            % Given:
-A=Vpp;  
-T0 = 0.002; %Miliseconds      % Given:
+Vpp = 1.25; %Volts            % Arbitary Peak-to-peak Voltage
+A=Vpp;                        % Amplitude
+T0 = 0.002; %Miliseconds      % Time Period
 VRMS = Vpp*(1/(2*sqrt(2)))    % Voltage RMS Formula:
 VRMS_dBV=20*log10(VRMS/1)     % Voltage dBV RMS Formula:
 R = 50; %Ohms                 
@@ -35,10 +35,8 @@ VRMS_dBm = 20*log10(VRMS/Vr)  % Voltage dBm RMS Formula:
 
 % Square Wave:
 tau=[(T0/5); (T0/4); (T0/3); (T0/2)]   %Length of Time Constant
-N=20;                               %Samples
-Th=1e-12;                           % Threshold Value for Theta
-M1=2;
-M2=1000;
+N=20;                                  %Samples
+Th=1e-12;                              % Threshold Value for Theta
 M=N;
 
 % Square Wave:
@@ -46,7 +44,7 @@ M=N;
 f0 = 1/T0                           % Period to Frequency Conversion
 w0=2*pi/T0                          % Omega-not Conversion
 d=tau/T0                            % Duty Cycle %
-a0=(A*tau/T0)       % DC Offset @ t=0
+a0=(A*tau/T0)                       % DC Offset @ t=0
 
 % Square Wave:
 % Intervals
