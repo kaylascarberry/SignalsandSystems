@@ -40,10 +40,10 @@ plot(quantized_audio);
 title([num2str(encode_bit_index) ' bit quantized ' audfls_name{imgfls_index} ' not using quantiz' ]);
 xlabel('X Axis'); ylabel('Y Axis');
 axis tight;
-if (imgfls_index==2 && encode_bit_index==4)%k is the audio file, i is the number of bits
+if (imgfls_index==2 && encode_bit_index==4)
 soundsc(quantized_audio,16000,16)
 % second argument is fs.
-% may need to change, eg k=2 needs to be played at 16000
+% eg k=2 needs to be played at 16000
 end
 end
 subplot((length(encode_bits)+1)/2,2,length(encode_bits)+1);
@@ -52,7 +52,7 @@ title([' Original ' audfls_name{imgfls_index}]);
 xlabel('Time'); ylabel('Volume');
 axis tight;
 %Quantize using quantiz
-10
+
 fsf(2*imgfls_index)=figure(2*imgfls_index);
 set(fsf(2*imgfls_index), 'Units', 'Normalized', 'OuterPosition', [0 0 1 1]);
 for encode_bit_index = 1:length(audfls_name)
@@ -73,7 +73,7 @@ title([num2str(encode_bits(encode_bit_index)) ' bit quantized ' audfls_name{imgf
 xlabel('Time'); ylabel('Volume');
 axis tight;
 %{
-if (k==2 && i==4)%k is the audio file, i is the number of bits
+if (k==2 && i==4)
 soundsc(quants,8000,16)
 end
 %}
